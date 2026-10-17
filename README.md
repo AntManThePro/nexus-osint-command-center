@@ -4,7 +4,7 @@ Elite field vault. Live particle signal flow, client-side SHA-256 gate, NEXUS ne
 
 **Live demo:** https://antmanthepro.github.io/nexus-osint-command-center/
 
-Demo passphrase: `admin`
+Operator key: `admin` (client-side only — not shown on the page)
 
 ## Files
 - `index.html` — self-contained command center (particles, filters, session)

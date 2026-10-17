@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>NEXUS OSINT Command Center</title>
+  <meta name="theme-color" content="#0a0a0f">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="NEXUS OSINT">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230a0a0f' stroke='%2300ff87' stroke-width='1.5'/%3E%3Ccircle cx='32' cy='32' r='19' fill='none' stroke='%2360efff' stroke-width='1.2'/%3E%3Cpath d='M20 42 L32 14 L44 42 M25.5 32 H38.5' fill='none' stroke='%2300ff87' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='32' cy='32' r='3.2' fill='%23ff0080'/%3E%3C/svg%3E" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230a0a0f' stroke='%2300ff87' stroke-width='1.5'/%3E%3Ccircle cx='32' cy='32' r='19' fill='none' stroke='%2360efff' stroke-width='1.2'/%3E%3Cpath d='M20 42 L32 14 L44 42 M25.5 32 H38.5' fill='none' stroke='%2300ff87' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='32' cy='32' r='3.2' fill='%23ff0080'/%3E%3C/svg%3E">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root {
+      --neon-green: #00ff87;
+      --neon-cyan: #60efff;
+      --neon-pink: #ff0080;
+      --neon-yellow: #ffcc00;
+      --bg: #0a0a0f;
+    }
+    body { background: var(--bg); color: #e2e8f0; font-family: 'JetBrains Mono', 'Fira Code', monospace, system-ui; overflow-x: hidden; }
+    canvas#particles { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; }
+    .content { position: relative; z-index: 1; }
+    .glow { text-shadow: 0 0 8px var(--neon-cyan), 0 0 16px var(--neon-green); }
+    .card-glow:hover { box-shadow: 0 0 20px rgba(0,255,135,0.3), inset 0 0 10px rgba(96,239,255,0.1); border-color: var(--neon-green) !important; }
+    .nexus-stamp { display: flex; align-items: center; justify-content: space-between; padding: 0.5rem 0; }
+    .nexus-chip { font-size: 0.65rem; letter-spacing: 0.1em; color: var(--neon-yellow); opacity: 0.8; }
+    input:focus { outline: none; box-shadow: 0 0 0 2px var(--neon-cyan); }
+    .pulse { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: #111; }
+    ::-webkit-scrollbar-thumb { background: var(--neon-green); border-radius: 3px; }
+  </style>
+</head>
+<body class="bg-[#0a0a0f] text-slate-200 min-h-screen">
+  <canvas id="particles"></canvas>
+  <div class="content min-h-screen">
+    <!-- GATE -->
+    <div id="gate" class="flex items-center justify-center min-h-screen p-4">
+      <div class="w-full max-w-md p-8 bg-black/70 border border-[#00ff87]/40 rounded-lg backdrop-blur-md shadow-[0_0_40px_rgba(0,255,135,0.15)]">
+        <header class="nexus-stamp mb-6">
+          <div>
+            <div class="nexus-chip">DoubleA · AntManThePro</div>
+            <h1 class="text-4xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-[#00ff87] to-[#60efff]">NEXUS</h1>
+            <p class="text-xs text-[#60efff]/70 mt-0.5">NExtended Xperimental USers</p>
+          </div>
+          <svg width="56" height="56" viewBox="0 0 64 64" aria-label="NEXUS sigil">
+            <rect width="64" height="64" rx="14" fill="#0a0a0f" stroke="#00ff87" stroke-width="1.5"/>
+            <circle cx="32" cy="32" r="19" fill="none" stroke="#60efff" stroke-width="1.2"/>
+            <path d="M20 42 L32 14 L44 42 M25.5 32 H38.5" fill="none" stroke="#00ff87" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="32" cy="32" r="3.2" fill="#ff0080"/>
+          </svg>
+        </header>
+        <h2 class="text-xl font-bold mb-1 tracking-widest text-[#ffcc00]">OSINT.COMMAND</h2>
+        <p class="text-sm text-slate-400 mb-6">Authorization required. Field node active.</p>
+        <form id="unlockForm">
+          <input id="passInput" type="password" placeholder="Passphrase..." class="w-full bg-black/80 border border-[#60efff]/40 text-[#00ff87] px-4 py-3 mb-4 rounded focus:border-[#00ff87] transition-all" autofocus autocomplete="off">
+          <p id="errorMsg" class="text-[#ff0080] text-xs mb-3 hidden pulse">ACCESS DENIED. Trace logged.</p>
+          <button type="submit" class="w-full bg-[#00ff87]/10 border border-[#00ff87] text-[#00ff87] hover:bg-[#00ff87] hover:text-black py-3 font-bold uppercase tracking-wider transition-all duration-200">
+            Authenticate
+          </button>
+        </form>
+        <p class="text-[10px] text-slate-600 mt-6 text-center">Demo: admin · Client-side only · Session persists</p>
+      </div>
+    </div>
+
+    <!-- DASHBOARD -->
+    <div id="dashboard" class="hidden p-4 md:p-8 max-w-7xl mx-auto">
+      <header class="nexus-stamp border-b border-[#00ff87]/20 pb-4 mb-6 flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <div class="nexus-chip">DoubleA · AntManThePro</div>
+          <h1 class="text-3xl md:text-4xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-[#00ff87] via-[#60efff] to-[#ff0080]">NEXUS OSINT COMMAND</h1>
+          <p class="text-xs text-[#60efff]/70">NExtended Xperimental USers · Field Ops Vault</p>
+        </div>
+        <div class="flex items-center gap-4 text-xs font-mono">
+          <span id="sessionTimer" class="text-[#ffcc00]">00:00:00</span>
+          <span class="text-[#00ff87] pulse">● LIVE</span>
+          <button id="lockBtn" class="px-3 py-1 border border-[#ff0080]/50 text-[#ff0080] hover:bg-[#ff0080]/20 transition-colors rounded">[ LOCK ]</button>
+        </div>
+      </header>
+
+      <div class="mb-6 flex flex-col md:flex-row gap-4 items-center">
+        <input id="search" type="text" placeholder="Filter tools, domains, techniques..." class="flex-1 bg-black/60 border border-[#60efff]/30 px-4 py-2 rounded text-sm focus:border-[#00ff87]">
+        <div class="flex gap-2 text-xs">
+          <button class="filter-btn px-3 py-1 border border-[#00ff87]/40 text-[#00ff87] rounded hover:bg-[#00ff87]/20" data-cat="all">ALL</button>
+          <button class="filter-btn px-3 py-1 border border-slate-600 text-slate-400 rounded hover:border-[#60efff]" data-cat="infra">INFRA</button>
+          <button class="filter-btn px-3 py-1 border border-slate-600 text-slate-400 rounded hover:border-[#60efff]" data-cat="identity">IDENTITY</button>
+          <button class="filter-btn px-3 py-1 border border-slate-600 text-slate-400 rounded hover:border-[#60efff]" data-cat="imint">IMINT</button>
+          <button class="filter-btn px-3 py-1 border border-slate-600 text-slate-400 rounded hover:border-[#60efff]" data-cat="threat">THREAT</button>
+        </div>
+      </div>
+
+      <div id="grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6"></div>
+
+      <div class="mt-12 text-center text-[10px] text-slate-600">
+        NEXUS OSINT Command Center · Built for field execution · Particles = live signal flow · Export ready
+      </div>
+    </div>
+  </div>
+
+<script>
+const TARGET_HASH = "8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918"; // "admin"
+
+const categories = [
+  { id: "infra", title: "Infrastructure & Surface", color: "#00ff87", tools: [
+    { name: "Shodan", desc: "Search engine for internet-connected devices & IoT", url: "https://www.shodan.io/" },
+    { name: "Censys", desc: "Attack surface and certificate intelligence", url: "https://censys.io/" },
+    { name: "theHarvester", desc: "Email, subdomain, and IP enumeration", url: "https://github.com/laramies/theHarvester" },
+    { name: "DNSDumpster", desc: "Passive DNS reconnaissance and mapping", url: "https://dnsdumpster.com/" },
+    { name: "BGPView", desc: "ASN and IP routing visualization", url: "https://bgpview.io/" }
+  ]},
+  { id: "identity", title: "Identity & Credential Recon", color: "#60efff", tools: [
+    { name: "Sherlock", desc: "Hunt usernames across 400+ social networks", url: "https://github.com/sherlock-project/sherlock" },
+    { name: "WhatsMyName", desc: "Rapid username enumeration and discovery", url: "https://whatsmyname.app/" },
+    { name: "Have I Been Pwned", desc: "Global data breach and credential tracker", url: "https://haveibeenpwned.com/" },
+    { name: "Hunter.io", desc: "Corporate email discovery and verification", url: "https://hunter.io/" },
+    { name: "PhoneInfoga", desc: "Advanced phone number OSINT", url: "https://github.com/sundowndev/phoneinfoga" }
+  ]},
+  { id: "imint", title: "IMINT & Geolocation", color: "#ffcc00", tools: [
+    { name: "Overpass Turbo", desc: "Advanced OpenStreetMap querying framework", url: "https://overpass-turbo.eu/" },
+    { name: "Sentinel Hub", desc: "High-res satellite imagery analysis", url: "https://apps.sentinel-hub.com/eo-browser/" },
+    { name: "SunCalc", desc: "Solar tracking for shadow-based chronolocation", url: "https://www.suncalc.org/" },
+    { name: "Bellingcat OSM", desc: "Custom geolocation search utilities", url: "https://bellingcat.com/" },
+    { name: "FlightRadar24", desc: "Real-time airspace tracking", url: "https://www.flightradar24.com/" }
+  ]},
+  { id: "threat", title: "Link Analysis & Threat Intel", color: "#ff0080", tools: [
+    { name: "Maltego", desc: "Graph-based relationship visualization", url: "https://www.maltego.com/" },
+    { name: "SpiderFoot", desc: "Automated OSINT collection across 200+ sources", url: "https://www.spiderfoot.net/" },
+    { name: "AlienVault OTX", desc: "Crowdsourced Open Threat Exchange", url: "https://otx.alienvault.com/" },
+    { name: "VirusTotal", desc: "File, domain, and IP malware analysis", url: "https://www.virustotal.com/" },
+    { name: "IntelX", desc: "Search engine for intelligence data", url: "https://intelx.io/" }
+  ]}
+];
+
+// Particle system
+const canvas = document.getElementById('particles');
+const ctx = canvas.getContext('2d');
+let particles = [];
+let nodes = [];
+let mouse = { x: null, y: null };
+
+function resize() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  initNodes();
+}
+window.addEventListener('resize', resize);
+resize();
+
+function initNodes() {
+  nodes = [];
+  const count = Math.min(12, Math.floor(window.innerWidth / 120));
+  for (let i = 0; i < count; i++) {
+    nodes.push({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
+      vx: (Math.random() - 0.5) * 0.3,
+      vy: (Math.random() - 0.5) * 0.3
+    });
+  }
+}
+
+class Particle {
+  constructor(from, to) {
+    this.from = from;
+    this.to = to;
+    this.progress = 0;
+    this.speed = 0.005 + Math.random() * 0.01;
+    this.size = 1.5 + Math.random() * 2;
+    this.color = Math.random() > 0.5 ? '#00ff87' : '#60efff';
+  }
+  update() {
+    this.progress += this.speed;
+    if (this.progress >= 1) {
+      this.progress = 0;
+      // reassign
+      const n = nodes[Math.floor(Math.random() * nodes.length)];
+      this.from = this.to;
+      this.to = n;
+    }
+  }
+  draw() {
+    const x = this.from.x + (this.to.x - this.from.x) * this.progress;
+    const y = this.from.y + (this.to.y - this.from.y) * this.progress;
+    ctx.beginPath();
+    ctx.arc(x, y, this.size, 0, Math.PI * 2);
+    ctx.fillStyle = this.color;
+    ctx.shadowBlur = 12;
+    ctx.shadowColor = this.color;
+    ctx.fill();
+    ctx.shadowBlur = 0;
+  }
+}
+
+function spawnParticles() {
+  particles = [];
+  for (let i = 0; i < 40; i++) {
+    const a = nodes[Math.floor(Math.random() * nodes.length)];
+    const b = nodes[Math.floor(Math.random() * nodes.length)];
+    particles.push(new Particle(a, b));
+  }
+}
+spawnParticles();
+
+function animate() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  // draw connections faintly
+  nodes.forEach((n, i) => {
+    n.x += n.vx; n.y += n.vy;
+    if (n.x < 0 || n.x > canvas.width) n.vx *= -1;
+    if (n.y < 0 || n.y > canvas.height) n.vy *= -1;
+    nodes.forEach((m, j) => {
+      if (i < j) {
+        const dx = n.x - m.x, dy = n.y - m.y;
+        const d = Math.hypot(dx, dy);
+        if (d < 220) {
+          ctx.strokeStyle = `rgba(0,255,135,${0.15 * (1 - d/220)})`;
+          ctx.lineWidth = 0.5;
+          ctx.beginPath();
+          ctx.moveTo(n.x, n.y);
+          ctx.lineTo(m.x, m.y);
+          ctx.stroke();
+        }
+      }
+    });
+  });
+  particles.forEach(p => { p.update(); p.draw(); });
+  requestAnimationFrame(animate);
+}
+animate();
+
+// Auth
+async function hashPassword(password) {
+  const msgBuffer = new TextEncoder().encode(password);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+  return Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+document.getElementById('unlockForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const pass = document.getElementById('passInput').value;
+  const hash = await hashPassword(pass);
+  if (hash === TARGET_HASH) {
+    sessionStorage.setItem('nexus_osint_unlocked', '1');
+    unlock();
+  } else {
+    document.getElementById('errorMsg').classList.remove('hidden');
+    document.getElementById('passInput').value = '';
+    setTimeout(() => document.getElementById('errorMsg').classList.add('hidden'), 2000);
+  }
+});
+
+function unlock() {
+  document.getElementById('gate').classList.add('hidden');
+  document.getElementById('dashboard').classList.remove('hidden');
+  renderGrid();
+  startTimer();
+}
+
+function lock() {
+  sessionStorage.removeItem('nexus_osint_unlocked');
+  document.getElementById('dashboard').classList.add('hidden');
+  document.getElementById('gate').classList.remove('hidden');
+  document.getElementById('passInput').value = '';
+  document.getElementById('passInput').focus();
+}
+
+document.getElementById('lockBtn').addEventListener('click', lock);
+
+// Check session
+if (sessionStorage.getItem('nexus_osint_unlocked') === '1') unlock();
+
+// Render
+let currentFilter = 'all';
+let searchTerm = '';
+
+function renderGrid() {
+  const grid = document.getElementById('grid');
+  grid.innerHTML = '';
+  categories.forEach(cat => {
+    if (currentFilter !== 'all' && currentFilter !== cat.id) return;
+    cat.tools.forEach(tool => {
+      if (searchTerm && !`${tool.name} ${tool.desc}`.toLowerCase().includes(searchTerm.toLowerCase())) return;
+      const card = document.createElement('a');
+      card.href = tool.url;
+      card.target = '_blank';
+      card.rel = 'noreferrer';
+      card.className = 'block p-4 bg-black/50 border border-slate-800 rounded card-glow transition-all duration-300 group relative overflow-hidden';
+      card.innerHTML = `
+        <div class="absolute left-0 top-0 bottom-0 w-1" style="background:${cat.color}"></div>
+        <h3 class="font-bold text-sm tracking-wide" style="color:${cat.color}">${tool.name}</h3>
+        <p class="text-xs text-slate-500 mt-1 leading-relaxed">${tool.desc}</p>
+        <div class="mt-2 text-[10px] text-[#60efff]/60 group-hover:text-[#00ff87] transition-colors">LAUNCH →</div>
+      `;
+      grid.appendChild(card);
+    });
+  });
+}
+
+document.getElementById('search').addEventListener('input', (e) => {
+  searchTerm = e.target.value;
+  renderGrid();
+});
+
+document.querySelectorAll('.filter-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.filter-btn').forEach(b => {
+      b.classList.remove('border-[#00ff87]/40', 'text-[#00ff87]', 'bg-[#00ff87]/10');
+      b.classList.add('border-slate-600', 'text-slate-400');
+    });
+    btn.classList.remove('border-slate-600', 'text-slate-400');
+    btn.classList.add('border-[#00ff87]/40', 'text-[#00ff87]');
+    currentFilter = btn.dataset.cat;
+    renderGrid();
+  });
+});
+
+// Timer
+let startTime = Date.now();
+function startTimer() {
+  setInterval(() => {
+    const elapsed = Math.floor((Date.now() - startTime) / 1000);
+    const h = String(Math.floor(elapsed / 3600)).padStart(2, '0');
+    const m = String(Math.floor((elapsed % 3600) / 60)).padStart(2, '0');
+    const s = String(elapsed % 60).padStart(2, '0');
+    document.getElementById('sessionTimer').textContent = `${h}:${m}:${s}`;
+  }, 1000);
+}
+
+// Mouse for potential future attraction
+canvas.addEventListener('mousemove', (e) => { mouse.x = e.clientX; mouse.y = e.clientY; });
+</script>
+</body>
+</html>
